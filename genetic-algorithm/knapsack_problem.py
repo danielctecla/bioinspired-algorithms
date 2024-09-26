@@ -172,10 +172,12 @@ def mutation(chromosome):
 def best_chromosome(chrom_1, chrom_2):
     value_1 = sum(chrom_1[i] * values[i] for i in range(n))
     value_2 = sum(chrom_2[i] * values[i] for i in range(n))
+
+    weight_2 = sum(chrom_2[i] * weights[i] for i in range(n))
     
-    if value_1 > value_2:
-        return chrom_1
-    return chrom_2
+    if value_1 < value_2 and weight_2 <= max_weight:
+        return chrom_2
+    return chrom_1
 
 
 if __name__ == "__main__":
@@ -244,18 +246,17 @@ if __name__ == "__main__":
                 child2 = mutation(child2)
                 print("\n")
 
-                # check if the new chromosomes are valid
-                # if not, generate a new one but keep the best one
                 # uncomment the code below to use this feature if it is necessary
-                if not valid_chromosome(child1):
-                    child1 = generate_chromosome()
-                    while not valid_chromosome(child1):
-                        child1 = generate_chromosome()
 
-                if not valid_chromosome(child2):
-                    child2 = generate_chromosome()
-                    while not valid_chromosome(child2):
-                        child2 = generate_chromosome()
+                # if not valid_chromosome(child1):
+                #     child1 = generate_chromosome()
+                #     while not valid_chromosome(child1):
+                #         child1 = generate_chromosome()
+
+                # if not valid_chromosome(child2):
+                #     child2 = generate_chromosome()
+                #     while not valid_chromosome(child2):
+                #         child2 = generate_chromosome()
 
                 # verificar si hubo cambios en los hijos
                 if child1 != child1_copy or child2 != child2_copy:
