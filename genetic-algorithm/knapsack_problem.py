@@ -1,4 +1,5 @@
 import random
+from tabulate import tabulate
 
 
 #--------Configuration
@@ -26,6 +27,8 @@ n = len(weights)
 
 #--------Functions
 
+# <-- create chromosomes -->
+
 # validate total weight
 def valid_chromosome(chromosome):
     weight = 0
@@ -45,6 +48,8 @@ def generate_chromosome():
         chromosome.append(random.randint(necessary[i], 10))
     return chromosome
 
+# <-- create population -->
+
 # generate the initial population
 def generate_population():
     population = []
@@ -58,6 +63,21 @@ def generate_population():
         population.append(chromosome)
         
     return population
+
+def print_population(population):
+    table = []
+    
+    for i, chromosome in enumerate(population):
+        total_value = sum(chromosome[j] * values[j] for j in range(n))
+        total_weight = sum(chromosome[j] * weights[j] for j in range(n))
+        
+        table.append([f"Chromosome {i}", chromosome, total_value, total_weight])
+    
+    headers = ["Chromosome", "Chromosome Representation", "Total Value", "Total Weight"]
+    
+    print(tabulate(table, headers=headers, tablefmt="pipe"))
+
+# <-- Parent selection -->
 
 # get the accumulated probability of each chromosome
 def get_vector_probability(population):
@@ -74,11 +94,11 @@ def get_vector_probability(population):
     
     return accumulated_probabilities
 
-def print_population(population):
-    for i, chromosome in enumerate(population):
-        total_value = sum(chromosome[i] * values[i] for i in range(n))
-        total_weight = sum(chromosome[i] * weights[i] for i in range(n))
-        print(f"Chromosome {i}: {chromosome}, Value: {total_value}, Weight: {total_weight}")
+def print_vector_probability(probabilities):
+    table = [[i, probabilities[i]] for i in range(NUMBER_CHROMOSOMES)]
+    headers = ["Chromosome", "Acculated Probability"]
+    print(tabulate(table, headers=headers, tablefmt="pipe"))
+    
 
 # get the parents for the crossover
 def get_parents(probabilities):
@@ -88,7 +108,7 @@ def get_parents(probabilities):
     r1 = random.uniform(0, 1)
 
     for i, prob in enumerate(probabilities):
-        if r1 < prob:
+        if r1 < prob: 
             parent1_ = i
             break
     
@@ -109,10 +129,17 @@ def get_parents(probabilities):
 
     return parent1_, parent2_
 
+# <-- Crossover -->
+
 # crossover function
 def crossover(parent1, parent2):
     random_vector = [random.uniform(0, 1) for i in range(n)]
-    print(f"Random Vector: {random_vector}")
+    # print(f"Random Vector: {random_vector}")
+    random_vector_table = [[i,[val]] for i, val in enumerate(random_vector)]
+    headers = ["Random Vector"]
+    print(tabulate(random_vector_table, headers=headers, tablefmt="pipe"))
+    print("\n")
+
     child1 = []
     child2 = []
 
@@ -125,6 +152,8 @@ def crossover(parent1, parent2):
             child2.append(parent1[i])
     
     return child1, child2
+
+# <-- Mutation -->
 
 # mutation function
 def mutation(chromosome):
@@ -151,34 +180,69 @@ def best_chromosome(chrom_1, chrom_2):
 
 if __name__ == "__main__":
 
+    title = "Initial Population" 
+    print("=" * len(title))
+    print(title)
+    print("=" * len(title))
+
+
     population = generate_population()
     print_population(population)
+    print("\n")
 
     for generation in range(GENERATIONS):
+        print("=" * len(f"Generation {generation+1}"))
         print(f"Generation {generation+1}")
+        print("=" * len(f"Generation {generation+1}"))
+        print("\n")
         probability = get_vector_probability(population)
-        print(probability)
+        print( "=" * len("Roulette probability"))
+        print("Roulette probability")
+        print( "=" * len("Roulette probability"))
+        print_vector_probability(probability)
+
+
+        # print(probability)
 
         new_population = []
 
         for i in range(NUMBER_CHROMOSOMES//2):
-            print(f"-------------------Chromosome {i}")
+            print("\n")
+            print( "-" * len(f"Chromosome {i}"))
+            print(f"Chromosome {i}")
+            print( "-" * len(f"Chromosome {i}"))
+            print("\n")
 
             parent1_idx, parent2_idx = get_parents(probability)
-            print(f"Parent 1: {parent1_idx}, Parent 2: {parent2_idx}")
+            # print(f"Parent 1: {parent1_idx}, Parent 2: {parent2_idx}")
+            parent_table = [[parent1_idx, parent2_idx]]
+            headers = ["Parent 1", "Parent 2"]
+            print(tabulate(parent_table, headers=headers, tablefmt="pipe"))
+            print("\n")
 
             parent1 = population[parent1_idx]
             parent2 = population[parent2_idx]
             
             crossover_or_not = random.uniform(0, 1)
-            print(f"Crossover Rate: {crossover_or_not}")
+            crossover_table = [[crossover_or_not]]
+            headers = ["Crossover Rate"]
+            print(tabulate(crossover_table, headers=headers, tablefmt="pipe"))
+            # print(f"Crossover Rate: {crossover_or_not}")
+            print("\n")
 
             if crossover_or_not < CROSSOVER_PROB:
                 child1, child2 = crossover(parent1, parent2)
-                print(f"Child 1: {child1}, Child 2: {child2}")
+                child_table = [[child1, child2]]
+                headers = ["Child 1", "Child 2"]
+                print(tabulate(child_table, headers=headers, tablefmt="pipe"))
+                print("\n")
+                # print(f"Child 1: {child1}, Child 2: {child2}")
+
+                child1_copy , child2_copy = child1, child2
 
                 child1 = mutation(child1)
                 child2 = mutation(child2)
+                print("\n")
 
                 # check if the new chromosomes are valid
                 # if not, generate a new one but keep the best one
@@ -192,6 +256,15 @@ if __name__ == "__main__":
                     child2 = generate_chromosome()
                     while not valid_chromosome(child2):
                         child2 = generate_chromosome()
+
+                # verificar si hubo cambios en los hijos
+                if child1 != child1_copy or child2 != child2_copy:
+                    child_table = [[child1, child2]]
+                    headers = ["Child 1", "Child 2"]
+                    print(tabulate(child_table, headers=headers, tablefmt="pipe"))
+                    print("\n")
+                
+
                 
                 new_chrom1 = best_chromosome(parent1, child1)
                 new_chrom2 = best_chromosome(parent2, child2)
